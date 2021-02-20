@@ -48,8 +48,6 @@ namespace TabooBot.Commands
                 replyToMessageId: message.MessageId,
                 replyMarkup: menuMarkup,
                 parseMode: ParseMode.MarkdownV2);
-
-            await TabooChatBot.BotClient.SendTextMessageAsync("@stas_khavruk", "Hi");
         }
     }
 }
