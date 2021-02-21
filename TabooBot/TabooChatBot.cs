@@ -6,17 +6,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Args;
+using TabooBot.Data;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types;
 
 namespace TabooBot
 {
     public sealed class TabooChatBot : IHostedService
     {
         public static ITelegramBotClient BotClient;
+        public static BotRepository Database = new BotRepository();
 
         private readonly List<Command> _commands;
         private readonly List<CallbackCommand> _callbackCommands;
@@ -74,16 +77,19 @@ namespace TabooBot
 
         private async void OnMessage(object sender, MessageEventArgs e)
         {
-            if (string.IsNullOrEmpty(e.Message.Text) && e.Message.NewChatMembers == null)
+            if (IsMessageEmpty(e.Message))
             {
                 return;
             }
 
-            var chatAdmins = await BotClient.GetChatAdministratorsAsync(e.Message.Chat.Id);
-            if (chatAdmins.All(admin => admin.User.Id != BotClient.BotId))
+            if (IsGroupChat(e.Message.Chat))
             {
-                // Do nothing until bot is not admin
-                return;
+                var chatAdmins = await BotClient.GetChatAdministratorsAsync(e.Message.Chat.Id);
+                if (chatAdmins.All(admin => admin.User.Id != BotClient.BotId))
+                {
+                    // Do nothing until bot is not admin in the group
+                    return;
+                }
             }
 
             foreach (var command in _commands.Where(command => command.Contains(e.Message)))
@@ -91,7 +97,7 @@ namespace TabooBot
                 string commandIdentifier = command.Triggers != null
                     ? command.Triggers.First()
                     : command.GetType().Name;
-                Log.Logger.Information($"{e.Message.From} (@{e.Message.Chat.Username}) requested command {commandIdentifier}: {e.Message.Text}");
+                Log.Logger.Information($"{e.Message.From} triggered command {commandIdentifier}: {e.Message.Text}");
 
                 try
                 {
@@ -106,6 +112,14 @@ namespace TabooBot
 
                 return;
             }
+        }
+        private static bool IsMessageEmpty(Message message)
+        {
+            return string.IsNullOrEmpty(message.Text) && message.NewChatMembers == null;
+        }
+        private static bool IsGroupChat(Chat chat)
+        {
+            return chat.Type == ChatType.Group || chat.Type == ChatType.Supergroup;
         }
 
         #region Polling Methods
