@@ -17,8 +17,7 @@ namespace TabooBot.Commands
 
         public override async Task Execute(Message message)
         {
-            string greeting = message.From.Username ?? $"{message.From.FirstName} {message.From.LastName}";
-            string responseText = $"Ahoj, {greeting}! Když vás někdo pozve do hry, upozorním vás na to!";
+            string responseText = $"Ahoj! Když vás někdo pozve do hry, upozorním vás na to!";
             await TabooChatBot.BotClient.SendTextMessageAsync(message.Chat.Id, responseText,
                 replyToMessageId: message.MessageId);
 
