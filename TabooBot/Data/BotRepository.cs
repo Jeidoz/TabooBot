@@ -38,6 +38,12 @@ namespace TabooBot.Data
                 [ChatId] INTEGER NOT NULL PRIMARY KEY,
                 [UserId] INTEGER NOT NULL,
                 [Username] NVARCHAR(128) NOT NULL);");
+
+            Connection.ExecuteNonQuery(@"
+                CREATE TABLE IF NOT EXISTS [GameCards] (
+                [Id] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                [FileId] NVARCHAR(1024) NOT NULL,
+                [UniqueFileId] NVARCHAR(1024) NOT NULL);");
         }
     }
 }

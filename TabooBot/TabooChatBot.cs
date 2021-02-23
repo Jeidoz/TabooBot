@@ -20,19 +20,24 @@ namespace TabooBot
     {
         public static ITelegramBotClient BotClient;
         public static BotRepository Database = new BotRepository();
+        public static long CardGalleryChatId;
 
         private readonly List<Command> _commands;
         private readonly List<CallbackCommand> _callbackCommands;
+        private readonly List<Command> _channelCommands;
 
         #region Initialization
         public TabooChatBot()
         {
+            CardGalleryChatId = long.Parse(Program.Configuration["CardGalleryChatId"]);
             InitializeListOfBotCommands(out _commands);
             InitializeListOfBotCallbackCommands(out _callbackCommands);
+            InitializeListOfChannelCommands(out _channelCommands);
             InitializeBotClientInstance(Program.Configuration["BotToken"]);
 
             BotClient.OnMessage += OnMessage;
             BotClient.OnMessageEdited += OnMessage;
+            BotClient.OnUpdate += OnUpdate;
             //BotClient.OnCallbackQuery += OnCallbackQuery;
         }
 
@@ -60,6 +65,18 @@ namespace TabooBot
             }
         }
 
+        private void InitializeListOfChannelCommands(out List<Command> commands)
+        {
+            var types = GetAllTypesInTheNamespace("TabooBot.Commands.Channel")
+                .Where(type => type.IsSubclassOf(typeof(Command)))
+                .ToArray();
+            commands = new List<Command>(types.Length);
+            foreach (var type in types)
+            {
+                commands.Add((Command)Activator.CreateInstance(type));
+            }
+        }
+
         private Type[] GetAllTypesInTheNamespace(string @namespace)
         {
             return Assembly
@@ -74,6 +91,37 @@ namespace TabooBot
             BotClient = new TelegramBotClient(botToken);
         }
         #endregion
+
+        private async void OnUpdate(object sender, UpdateEventArgs e)
+        {
+            if (e.Update.Type == UpdateType.Message)
+            {
+                return;
+            }
+            if (e.Update.Type == UpdateType.ChannelPost)
+            {
+                foreach (var command in _channelCommands.Where(command => command.Contains(e.Update.ChannelPost)))
+                {
+                    string commandIdentifier = command.Triggers != null
+                        ? command.Triggers.First()
+                        : command.GetType().Name;
+                    Log.Logger.Information($"{e.Update.ChannelPost.From} triggered command {commandIdentifier}: {e.Update.ChannelPost.Text}");
+
+                    try
+                    {
+                        await command.Execute(e.Update.ChannelPost);
+                    }
+                    catch (Exception ex)
+                    {
+                        string errorTemplate = $"Unpredictable error occured ({nameof(ex)}): {ex.Message}\n" +
+                                               $"Stack Trace: {ex.StackTrace}";
+                        Log.Error(ex, errorTemplate);
+                    }
+
+                    return;
+                }
+            }
+        }
 
         private async void OnMessage(object sender, MessageEventArgs e)
         {
