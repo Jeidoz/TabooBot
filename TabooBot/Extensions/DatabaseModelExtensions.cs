@@ -42,40 +42,14 @@ namespace TabooBot.Extensions
             var rows = connection.Query(sql);
             return (int)(rows.First().Count) > 0;
         }
-
-        public static void SaveNewGameCard(this GameCard card, SQLiteConnection connection)
+        public static int GetCardsAmount(this SQLiteConnection connection)
         {
-            connection.ExecuteNonQuery(@"
-                INSERT INTO GameCards (FileId, UniqueFileId)
-                VALUES (@FileId, @UniqueFileId)",
-                card);
+            var rows = connection.Query("SELECT * FROM CardsAmount");
+            return (int)rows.First().Amount;
         }
-        public static GameCard GetGameCardById(this SQLiteConnection connection, int id)
+        public static void UpdateCardsAmount(this SQLiteConnection connection, int amount)
         {
-            var sql = @$"
-                SELECT *
-                FROM GameCards
-                WHERE Id = {id}";
-            return connection.Query<GameCard>(sql)
-                .FirstOrDefault();
-        }
-        public static GameCard GetGameCardByFileId(this SQLiteConnection connection, int fileId)
-        {
-            var sql = @$"
-                SELECT *
-                FROM GameCards
-                WHERE UniqueFileId = {fileId}";
-            return connection.Query<GameCard>(sql)
-                .FirstOrDefault();
-        }
-        public static bool ExistsInDatabaseByFileId(this GameCard card, SQLiteConnection connection)
-        {
-            var sql = @$"
-                SELECT COUNT(1) AS 'Count'
-                FROM GameCards
-                WHERE UniqueFileId = '{card.UniqueFileId}'";
-            var rows = connection.Query(sql);
-            return (int)(rows.First().Count) > 0;
+            connection.ExecuteNonQuery("UPDATE CardsAmount SET Amount = @Amount", new { Amount = amount });
         }
     }
 }

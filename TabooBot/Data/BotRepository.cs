@@ -23,6 +23,9 @@ namespace TabooBot.Data
             Connection = new SQLiteConnection($"Data Source={ConnectionString};Version=3;");
             Connection.Open();
             CreateAndSeedTablesIfNotExist();
+#if DEBUG
+            Connection.ExecuteNonQuery("INSERT INTO CardsAmount (Amount) VALUES (1221)");
+#endif
         }
         private void CreateDatabaseIfNotExists()
         {
@@ -44,6 +47,10 @@ namespace TabooBot.Data
                 [Id] INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                 [FileId] NVARCHAR(1024) NOT NULL,
                 [UniqueFileId] NVARCHAR(1024) NOT NULL);");
+
+            Connection.ExecuteNonQuery(@"
+                CREATE TABLE IF NOT EXISTS [CardsAmount] (
+                [Amount] INTEGER NOT NULL PRIMARY KEY);");
         }
     }
 }
