@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using TabooBot.Commands.Callback;
 using TabooBot.Commands.Callback.Data;
 using TabooBot.Extensions;
 using Telegram.Bot.Types;
@@ -28,16 +29,29 @@ namespace TabooBot.Commands
             var menuMarkup = new InlineKeyboardMarkup(
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("Začít hru", new CallbackQueryData
+                    // first row
+                    new[]
                     {
-                        Trigger = "StartGame",
-                        UserId = message.From.Id
-                    }.ToString()),
-                    InlineKeyboardButton.WithCallbackData("Nastavení hry", new CallbackQueryData
+                        InlineKeyboardButton.WithCallbackData("Výběř lidí", new CallbackQueryData
+                        {
+                            Trigger = CallbackTriggers.ChoosePlayers,
+                            UserId = message.From.Id
+                        }.ToString()),
+                        InlineKeyboardButton.WithCallbackData("Nastavení hry", new CallbackQueryData
+                        {
+                            Trigger = CallbackTriggers.GameSetupMenu,
+                            UserId = message.From.Id
+                        }.ToString())
+                    },
+                    // second row
+                    new[]
                     {
-                        Trigger = "SetupGame",
-                        UserId = message.From.Id
-                    }.ToString())
+                        InlineKeyboardButton.WithCallbackData("Začít hru", new CallbackQueryData
+                        {
+                            Trigger = CallbackTriggers.StartGame,
+                            UserId = message.From.Id
+                        }.ToString())
+                    }
                 });
             string escapePart = $"tg://user?id={message.From.Id}".EscapeMarkdownV2Characters();
             string username = message.From.Username.EscapeMarkdownV2Characters();
