@@ -32,7 +32,7 @@ namespace TabooBot.Commands
                     // first row
                     new[]
                     {
-                        InlineKeyboardButton.WithCallbackData("Výběř lidí", new CallbackQueryData
+                        InlineKeyboardButton.WithCallbackData("Výběr lidí", new CallbackQueryData
                         {
                             Trigger = CallbackTriggers.ChoosePlayers,
                             UserId = message.From.Id
@@ -55,7 +55,7 @@ namespace TabooBot.Commands
                 });
             string escapePart = $"tg://user?id={message.From.Id}".EscapeMarkdownV2Characters();
             string username = message.From.Username.EscapeMarkdownV2Characters();
-            string responseMarkdownV2Text = $"[@{username}]({escapePart}), co cheš udělat?";
+            string responseMarkdownV2Text = $"[@{username}]({escapePart}), co chceš udělat?";
             await TabooChatBot.BotClient.SendTextMessageAsync(
                 message.Chat.Id,
                 responseMarkdownV2Text,
